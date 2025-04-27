@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, FileImage, FilePdf } from 'lucide-react';
+import { Download, FileImage, FileText } from 'lucide-react';
 import { exportAsImage, exportAsPDF } from '@/utils/exportUtils';
 import { toast } from 'sonner';
 
@@ -49,7 +49,7 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({ elementId, filename }) =>
         className="flex items-center gap-1" 
         onClick={handleExportPDF}
       >
-        <FilePdf className="h-4 w-4" />
+        <FileText className="h-4 w-4" />
         <span>Export PDF</span>
       </Button>
     </div>
