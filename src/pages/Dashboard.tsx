@@ -26,79 +26,56 @@ import {
 } from '@/utils/predictionModel';
 
 const Dashboard = () => {
-  // State for data
   const [wardData, setWardData] = useState<WardData[]>(SAMPLE_WARD_DATA);
   const [predictedData, setPredictedData] = useState<WardData[]>([]);
   
-  // State for user selections
   const [selectedWards, setSelectedWards] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(2031);
   
-  // State for scenario controls
   const [populationGrowthRate, setPopulationGrowthRate] = useState<number>(2.0);
   const [infrastructureInvestment, setInfrastructureInvestment] = useState<number>(5.0);
   const [policyEffectiveness, setPolicyEffectiveness] = useState<number>(70.0);
   
-  // State for analysis metrics
   const [errorMetrics, setErrorMetrics] = useState<ErrorMetrics>({ rmse: 0, mae: 0, mape: 0 });
   const [outlierWards, setOutlierWards] = useState<string[]>([]);
   const [optimizationData, setOptimizationData] = useState<{ [key: string]: number }>({
     parks: 0, theatres: 0, malls: 0, gardens: 0, auditoriums: 0
   });
   
-  // State for charts
   const [happinessChartData, setHappinessChartData] = useState<ChartData[]>([]);
   const [infraChartData, setInfraChartData] = useState<ChartData[]>([]);
   const [popChartData, setPopChartData] = useState<ChartData[]>([]);
   
-  // Effect to handle data loading and sample data
   useEffect(() => {
-    // In a real app, you might load data from an API here
     if (wardData.length === 0) {
       setWardData(SAMPLE_WARD_DATA);
     }
-    
-    // Generate predictions with initial values
-    generatePredictions();
-    
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
-  // Effect to update predictions when parameters change
-  useEffect(() => {
-    generatePredictions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedWards, selectedYear, populationGrowthRate, infrastructureInvestment, policyEffectiveness]);
-  
-  // Effect to update chart data when ward data or predicted data changes
+
   useEffect(() => {
     updateChartData();
     updateAnalysisData();
   }, [wardData, predictedData, selectedWards]);
-  
+
   const handleDataLoaded = (data: WardData[]) => {
     if (data && data.length > 0) {
       setWardData(data);
       toast.success(`Successfully loaded ${data.length} records`);
       
-      // Extract all available wards from the new data
       const availableWards = [...new Set(data.map(item => item.Ward))];
       
-      // Update selected wards if needed
       if (selectedWards.length === 0) {
         setSelectedWards(availableWards.slice(0, Math.min(3, availableWards.length)));
       }
     }
   };
-  
+
   const generatePredictions = async () => {
     try {
-      // Filter for relevant comparison data
       const filteredHistoricalData = selectedWards.length > 0
         ? wardData.filter(item => selectedWards.includes(item.Ward))
         : wardData;
       
-      // Generate predictions using the API
       const predictions = await getPredictions({
         year: selectedYear,
         populationGrowthRate,
@@ -113,7 +90,7 @@ const Dashboard = () => {
       toast.error('Failed to generate predictions. Please check your inputs and server connection.');
     }
   };
-  
+
   const updateChartData = () => {
     const filteredHistorical = selectedWards.length > 0
       ? wardData.filter(item => selectedWards.includes(item.Ward))
@@ -123,7 +100,6 @@ const Dashboard = () => {
       ? predictedData.filter(item => selectedWards.includes(item.Ward))
       : predictedData;
     
-    // Prepare happiness comparison data
     const happinessData: ChartData[] = selectedWards.length > 0
       ? selectedWards.map(ward => {
           const historicalData = filteredHistorical.find(item => item.Ward === ward && item.Year === selectedYear);
@@ -137,7 +113,6 @@ const Dashboard = () => {
         })
       : [];
     
-    // Prepare infrastructure comparison data
     const infraData: ChartData[] = selectedWards.length > 0
       ? selectedWards.map(ward => {
           const historicalData = filteredHistorical.find(item => item.Ward === ward && item.Year === selectedYear);
@@ -151,7 +126,6 @@ const Dashboard = () => {
         })
       : [];
     
-    // Prepare population comparison data
     const popData: ChartData[] = selectedWards.length > 0
       ? selectedWards.map(ward => {
           const historicalData = filteredHistorical.find(item => item.Ward === ward && item.Year === selectedYear);
@@ -169,9 +143,8 @@ const Dashboard = () => {
     setInfraChartData(infraData);
     setPopChartData(popData);
   };
-  
+
   const updateAnalysisData = () => {
-    // Calculate error metrics for happiness prediction
     const metrics = calculateErrorMetrics(
       wardData.filter(item => selectedWards.includes(item.Ward)), 
       predictedData.filter(item => selectedWards.includes(item.Ward)),
@@ -179,19 +152,19 @@ const Dashboard = () => {
     );
     setErrorMetrics(metrics);
     
-    // Find outliers
     const outliers = findOutliers(
       predictedData.filter(item => selectedWards.includes(item.Ward)), 
       'HappinessIndex'
     );
     setOutlierWards(outliers);
     
-    // Get optimization suggestions
     const optimization = getOptimizationSuggestions(
       wardData.filter(item => item.HappinessIndex > 6.0)
     );
     setOptimizationData(optimization);
   };
+
+  const canPredict = wardData.length > 0 && selectedYear > 0;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -204,7 +177,6 @@ const Dashboard = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Sidebar with controls */}
           <div className="lg:col-span-3 space-y-6">
             <div className="bg-card rounded-lg border p-4 shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Data & Controls</h2>
@@ -224,6 +196,13 @@ const Dashboard = () => {
                     selectedYear={selectedYear}
                     onChange={setSelectedYear}
                   />
+
+                  {canPredict && (
+                    <PredictButton
+                      onPredict={generatePredictions}
+                      disabled={!canPredict}
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -243,7 +222,6 @@ const Dashboard = () => {
             />
           </div>
           
-          {/* Main content area */}
           <div className="lg:col-span-9" id="charts-container">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <motion.div
