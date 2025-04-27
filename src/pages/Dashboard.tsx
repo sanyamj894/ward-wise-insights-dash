@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
@@ -13,6 +14,7 @@ import ErrorMetricsPanel from '@/components/ErrorMetricsPanel';
 import OutlierPanel from '@/components/OutlierPanel';
 import OptimizationPanel from '@/components/OptimizationPanel';
 import ExportButtons from '@/components/ExportButtons';
+import PredictButton from '@/components/PredictButton';
 import ComparisonChart from '@/components/charts/ComparisonChart';
 import HappinessIndexChart from '@/components/charts/HappinessIndexChart';
 import InfrastructureChart from '@/components/charts/InfrastructureChart';
