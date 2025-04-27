@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { getPredictions } from '@/services/predictionService';
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -20,7 +20,6 @@ import InfrastructureChart from '@/components/charts/InfrastructureChart';
 import { WardData, ErrorMetrics, ChartData } from '@/types';
 import { SAMPLE_WARD_DATA, AVAILABLE_WARDS, AVAILABLE_YEARS } from '@/utils/sampleData';
 import { 
-  predictFutureValues, 
   calculateErrorMetrics,
   findOutliers,
   getOptimizationSuggestions
@@ -92,15 +91,15 @@ const Dashboard = () => {
     }
   };
   
-  const generatePredictions = () => {
+  const generatePredictions = async () => {
     try {
       // Filter for relevant comparison data
       const filteredHistoricalData = selectedWards.length > 0
         ? wardData.filter(item => selectedWards.includes(item.Ward))
         : wardData;
       
-      // Generate predictions
-      const predictions = predictFutureValues(filteredHistoricalData, {
+      // Generate predictions using the API
+      const predictions = await getPredictions({
         year: selectedYear,
         populationGrowthRate,
         infrastructureInvestment,
@@ -111,7 +110,7 @@ const Dashboard = () => {
       setPredictedData(predictions);
     } catch (error) {
       console.error('Prediction error:', error);
-      toast.error('Failed to generate predictions. Please check your inputs.');
+      toast.error('Failed to generate predictions. Please check your inputs and server connection.');
     }
   };
   
